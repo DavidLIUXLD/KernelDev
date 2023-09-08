@@ -1,9 +1,16 @@
 ORG 0
 BITS 16
 
-jmp 0x7c0:start ; change code segment address to 0x7c00
+_start:
+    jmp short start
+    nop
+
+times 33 db 0 ; Boot Parameter Block manual overwrite to prevent USB boot overwrite and corrupt bootloader
 
 start:
+    jmp 0x7c0:boot_main ; change code segment address to 0x7c00
+
+boot_main:
     
     cli ; Clear interrupts flag prevent interrupting of segment register changes
     mov ax, 0x7c0 ; boot loading to 0x7c00 (0x7c0 * 16 or shift left to 0x7c00 + ORG which is 0)
