@@ -42,5 +42,5 @@ print_char:
 
 
 message: db 'Hello World', 0 ; data segment(because of db) + ORG(location related to current segment) + offset within
-times 510-($ - $$) db 0
-dw 0xAA55 ; signature
+times 510-($ - $$) db 0 ; fill 0 between current and 516 byte addresses
+dw 0xAA55 ; signature at end of the segment
