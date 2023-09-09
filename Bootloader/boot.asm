@@ -10,6 +10,13 @@ times 33 db 0 ; Boot Parameter Block manual overwrite to prevent USB boot overwr
 start:
     jmp 0x7c0:boot_main ; change code segment address to 0x7c00
 
+handle_zero: ; self-defined interrupt vector zero
+    mov ah, 0eh
+    mov al, 'A'
+    mov bx, 0x00
+    int 0x10
+    iret
+
 boot_main:
     
     cli ; Clear interrupts flag prevent interrupting of segment register changes
@@ -20,6 +27,11 @@ boot_main:
     mov ss, ax
     mov sp, 0x7c00
     sti ; Enable interrupts
+
+    mov word[ss:0x00], handle_zero ; interrupt vector table from stack 
+    mov word[ss:0x02], 0x7c0
+
+    int 0
 
     mov si, message
     call print
@@ -37,9 +49,9 @@ print:
 
 print_char:
     mov ah, 0eh
+    mov bx, 0x00
     int 0x10
     ret
-
 
 message: db 'Hello World', 0 ; data segment(because of db) + ORG(location related to current segment) + offset within
 times 510-($ - $$) db 0 ; fill 0 between current and 516 byte addresses
