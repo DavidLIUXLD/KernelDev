@@ -67,19 +67,24 @@ gdt_end:
 
 
 gdt_descriptor:
-    dw gdt_end - gdt_start - 1 ; size of gdt_descriptor
-    dd gdt_start               ; descriptor address
+    dw gdt_end - gdt_start - 1  ; size of gdt_descriptor
+    dd gdt_start                ; descriptor address
 
-[BITS 32]                      ; change code to 32bit
+[BITS 32]                       ; change code to 32bit
 load32:
-    mov ax, DATA_SEG           ; assign data seg
+    mov ax, DATA_SEG            ; assign data seg
     mov ds, ax
     mov ss, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov ebp, 0x00200000        ; set stack frame
+    mov ebp, 0x00200000         ; set stack frame
     mov esp, ebp
+
+    in al, 0x92                 ; enable A20 line to read 21 bit of mem access
+    or al, 2
+    out 0x92, al
+
     jmp $
 
 times 510-($ - $$) db 0 ; fill 0 between current and 516 byte addresses
