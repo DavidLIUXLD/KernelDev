@@ -39,7 +39,7 @@ boot_main:          ; boot entry
     mov eax, cr0
     or al, 1            ; set PE (Protection Enable) bit in CR0 (Control Register 0)
     mov cr0, eax        ; hether the CPU is in Real Mode or in Protected Mode is defined by the lowest bit of the CR0, but since CS descriptor is still in current segment, execution still in 16-bit real mode
-    jmp CODE_SEG:load32 ; far jmp loading CS with 0x8 selector(base 0x00000000 + eip load32) pointing to 32-bit descriptor to switch to 32-bit code mode, clearing pre-fetched input, jumping to load32
+    jmp CODE_SEG:load32 ;far jmp loading CS with 0x8 selector(base 0x00000000 + eip load32) pointing to 32-bit descriptor to switch to 32-bit code mode, clearing pre-fetched input, jumping to load32
 
 
 ; GDT, offset increament by 8-bytes, word is 2-byte
@@ -70,22 +70,89 @@ gdt_descriptor:
     dw gdt_end - gdt_start - 1  ; size of gdt_descriptor
     dd gdt_start                ; descriptor address
 
-[BITS 32]                       ; change code to 32bit
+
+[BITS 32]
+;=============================================================================
+; load32:
+; Driver function loading Kernel beginning at disk/binary file sector 1 to buffer address  
+;
+; @return None
+;=============================================================================
 load32:
-    mov ax, DATA_SEG            ; assign data seg
-    mov ds, ax
-    mov ss, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ebp, 0x00200000         ; set stack frame
-    mov esp, ebp
+    mov eax, 1          ; Starting disk sector: Disk/binary sector 1, 0 is for boot
+    mov ecx, 100        ; Total sectors
+    mov edi, 0x01000000 ; Target Address
+    call ata_lba_read
 
-    in al, 0x92                 ; enable A20 line to read 21 bit of mem access
-    or al, 2
-    out 0x92, al
 
-    jmp $
+;=============================================================================
+; ATA read sectors (LBA mode) 
+;
+; @param EAX Logical Block Address of sector
+; @param CL  Number of sectors to read
+; @param RDI The address of buffer to put data obtained from disk
+;
+; @return None
+;=============================================================================
+ata_lba_read:
+    pushfd
+    and eax, 0x0FFFFFFF
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push edi
+
+    mov ebx, eax         ; Save LBA in RBX
+
+    mov edx, 0x01F6      ; Port to send drive and bit 24 - 27 of LBA
+    shr eax, 24          ; Get bit 24 - 27 in al
+    or al, 11100000b     ; Set bit 6 in al for LBA mode
+    out dx, al           ; Finish sending highest 8 bits
+
+    mov edx, 0x01F2      ; Port to send number of sectors
+    mov al, cl           ; Get number of sectors from CL
+    out dx, al
+
+    mov edx, 0x1F3       ; Port to send bit 0 - 7 of LBA
+    mov eax, ebx         ; Get LBA from EBX
+    out dx, al
+
+    mov edx, 0x1F4       ; Port to send bit 8 - 15 of LBA
+    mov eax, ebx         ; Get LBA from EBX
+    shr eax, 8           ; Get bit 8 - 15 in AL
+    out dx, al
+
+
+    mov edx, 0x1F5       ; Port to send bit 16 - 23 of LBA
+    mov eax, ebx         ; Get LBA from EBX
+    shr eax, 16          ; Get bit 16 - 23 in AL
+    out dx, al
+
+    mov edx, 0x1F7       ; Command port
+    mov al, 0x20         ; Read with retry.
+    out dx, al
+ 
+.still_going:  
+    in al, dx
+    test al, 8           ; the sector buffer requires servicing.
+    jz .still_going      ; until the sector buffer is ready.
+
+    mov eax, 256         ; to read 256 words = 1 sector
+    xor bx, bx
+    mov bl, cl           ; read CL sectors
+    mul bx
+    mov ecx, eax         ; RCX is counter for INSW
+    mov edx, 0x1F0       ; Data port, in and out
+    rep insw             ; in to [RDI] IO port specified in DX to Address in DI
+
+    pop edi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+    popfd
+    ret
 
 times 510-($ - $$) db 0 ; fill 0 between current and 516 byte addresses
 dw 0xAA55 ; signature at end of the segment
