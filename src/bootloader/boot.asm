@@ -39,7 +39,7 @@ boot_main:          ; boot entry
     mov eax, cr0
     or al, 1            ; set PE (Protection Enable) bit in CR0 (Control Register 0)
     mov cr0, eax        ; hether the CPU is in Real Mode or in Protected Mode is defined by the lowest bit of the CR0, but since CS descriptor is still in current segment, execution still in 16-bit real mode
-    jmp CODE_SEG:load32 ; far jmp loading CS with 0x8 selector pointing to 32-bit descriptor to switch to 32-bit code mode, clearing pre-fetched input, jumping to load32
+    jmp CODE_SEG:load32 ; far jmp loading CS with 0x8 selector(base 0x00000000 + eip load32) pointing to 32-bit descriptor to switch to 32-bit code mode, clearing pre-fetched input, jumping to load32
 
 
 ; GDT, offset increament by 8-bytes, word is 2-byte
