@@ -79,11 +79,11 @@ gdt_descriptor:
 ; @return None
 ;=============================================================================
 load32:
-    mov eax, 1          ; Starting disk sector: Disk/binary sector 1, 0 is for boot
-    mov ecx, 100        ; Total sectors
-    mov edi, 0x00100000 ; Target Address
-    call ata_lba_read
-    jmp CODE_SEG:0x00100000
+    mov eax, 1              ; Starting disk sector: Disk/binary sector 1, 0 is for boot
+    mov ecx, 100            ; Total sectors
+    mov edi, 0x00100000     ; Target Address
+    call ata_lba_read       ; Load kernel from binary
+    jmp CODE_SEG:0x00100000 ; Jump to kernel
 
 
 ;=============================================================================
