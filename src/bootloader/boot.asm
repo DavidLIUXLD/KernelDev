@@ -37,7 +37,7 @@ boot_main:          ; boot entry
     cli
     lgdt[gdt_descriptor]
     mov eax, cr0
-    or al, 1            ; set PE (Protection Enable) bit in CR0 (Control Register 0)
+    or al, 0x1            ; set PE (Protection Enable) bit in CR0 (Control Register 0)
     mov cr0, eax        ; hether the CPU is in Real Mode or in Protected Mode is defined by the lowest bit of the CR0, but since CS descriptor is still in current segment, execution still in 16-bit real mode
     jmp CODE_SEG:load32 ;far jmp loading CS with 0x8 selector(base 0x00000000 + eip load32) pointing to 32-bit descriptor to switch to 32-bit code mode, clearing pre-fetched input, jumping to load32
 
@@ -81,8 +81,9 @@ gdt_descriptor:
 load32:
     mov eax, 1          ; Starting disk sector: Disk/binary sector 1, 0 is for boot
     mov ecx, 100        ; Total sectors
-    mov edi, 0x01000000 ; Target Address
+    mov edi, 0x00100000 ; Target Address
     call ata_lba_read
+    jmp CODE_SEG:0x00100000
 
 
 ;=============================================================================
@@ -108,7 +109,7 @@ ata_lba_read:
     mov edx, 0x01F6      ; Port to send drive and bit 24 - 27 of LBA
     shr eax, 24          ; Get bit 24 - 27 in al
     or al, 11100000b     ; Set bit 6 in al for LBA mode
-    out dx, al           ; Finish sending highest 8 bits
+    out dx, al
 
     mov edx, 0x01F2      ; Port to send number of sectors
     mov al, cl           ; Get number of sectors from CL
@@ -132,9 +133,8 @@ ata_lba_read:
     mov edx, 0x1F7       ; Command port
     mov al, 0x20         ; Read with retry.
     out dx, al
- 
-.still_going:  
-    in al, dx
+
+    .still_going:  in al, dx
     test al, 8           ; the sector buffer requires servicing.
     jz .still_going      ; until the sector buffer is ready.
 
@@ -144,7 +144,7 @@ ata_lba_read:
     mul bx
     mov ecx, eax         ; RCX is counter for INSW
     mov edx, 0x1F0       ; Data port, in and out
-    rep insw             ; in to [RDI] IO port specified in DX to Address in DI
+    rep insw             ; in to [RDI]
 
     pop edi
     pop edx
@@ -153,6 +153,7 @@ ata_lba_read:
     pop eax
     popfd
     ret
+
 
 times 510-($ - $$) db 0 ; fill 0 between current and 516 byte addresses
 dw 0xAA55 ; signature at end of the segment
