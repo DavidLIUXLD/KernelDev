@@ -20,4 +20,8 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+    .asm :
+    {
+        *(.asm)
+    }
 }

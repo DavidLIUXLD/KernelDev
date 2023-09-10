@@ -1,4 +1,8 @@
 [BITS 32]                       ; change code to 32bit
+;kernel.asm.o needs to be loaded at first in the linker for the binary as it initiates data seg and other kernel starting process
+;so kernel.asm cannot be included in asm section(that is placed after all other sections to prevent misalignment) of the binary
+;linked by linker by "section .asm" and has to remain in the text section
+
 global _start
 CODE_SEG equ 0x08
 DATA_SEG equ 0x10
@@ -17,3 +21,5 @@ _start:
     out 0x92, al
 
     jmp $
+    
+    times 512-($ - $$) db 0     ; section alignment for kernel.asm to 512 bytes
