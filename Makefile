@@ -14,7 +14,7 @@ all: ./bin/boot.bin ./bin/kernel.bin
 
 ./bin/kernel.bin: $(FILES)
 	i686-elf-ld -g -relocatable $(FILES) -o ./build/kernelfull.o
-	i686-elf-gcc $(FLAGS) -T ./src/linker.ld -o ./bin/kernel.bin ./build/kernelfull.o
+	i686-elf-gcc $(FLAGS) ./build/kernelfull.o -T ./src/linker.ld -o ./bin/kernel.bin
 
 ./bin/boot.bin: ./src/bootloader/boot.asm
 	nasm -f bin ./src/bootloader/boot.asm -o ./bin/boot.bin	
