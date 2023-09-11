@@ -97,7 +97,6 @@ load32:
 ;=============================================================================
 ata_lba_read:
     pushfd
-    and eax, 0x0FFFFFFF
     push eax
     push ebx
     push ecx
@@ -108,11 +107,11 @@ ata_lba_read:
 
     mov edx, 0x01F6      ; Port to send drive and bit 24 - 27 of LBA
     shr eax, 24          ; Get bit 24 - 27 in al
-    or al, 11100000b     ; Set bit 6 in al for LBA mode
+    or eax, 0xE0         ; Set bit 6 in al for LBA mode
     out dx, al
 
     mov edx, 0x01F2      ; Port to send number of sectors
-    mov al, cl           ; Get number of sectors from CL
+    mov eax, ecx           ; Get number of sectors from CL
     out dx, al
 
     mov edx, 0x1F3       ; Port to send bit 0 - 7 of LBA
@@ -134,17 +133,20 @@ ata_lba_read:
     mov al, 0x20         ; Read with retry.
     out dx, al
 
-    .still_going:  in al, dx
-    test al, 8           ; the sector buffer requires servicing.
-    jz .still_going      ; until the sector buffer is ready.
+.next_sector:
+    push ecx
 
-    mov eax, 256         ; to read 256 words = 1 sector
-    xor bx, bx
-    mov bl, cl           ; read CL sectors
-    mul bx
-    mov ecx, eax         ; RCX is counter for INSW
-    mov edx, 0x1F0       ; Data port, in and out
-    rep insw             ; in to [RDI]
+.try_again:              ; Checking if we need to read
+    mov dx, 0x1f7
+    in al, dx
+    test al, 8           ; the sector buffer requires servicing.   
+    jz .try_again        ; until the sector buffer is ready.
+
+    mov ecx, 256        ; We need to read 256 words at a time
+    mov dx, 0x1F0
+    rep insw
+    pop ecx
+    loop .next_sector
 
     pop edi
     pop edx
