@@ -30,6 +30,5 @@ clean:
 	rm -rf ./bin/boot.bin
 	rm -rf ./bin/kernel.bin
 	rm -rf ./build/kernelfull.o
-	rm -rf ./build/kernel.asm.o
-	rm -rf ./build/kernel.o
+	rm -rf $(FILES)
 	
