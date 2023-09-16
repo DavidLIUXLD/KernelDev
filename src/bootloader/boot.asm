@@ -47,7 +47,7 @@ gdt_start:
 gdt_null:
 dd 0x0
 dd 0x0
-; offset 0x8
+; offset 0x8, CODE_SEG
 gdt_code:           ; CS pointing to this segment
 dw 0xffff           ; seg limit 0-15
 dw 0x0000           ; seg base 0-15
@@ -55,7 +55,7 @@ db 0x00             ; seg base 16-23
 db 0x9a             ; access byte 10011010
 db 0xcf             ; flag 1100 + limit 16-19
 db 0x00             ; seg base 24-31
-; offset at 0x10:
+; offset at 0x10, DATA_SEG
 gdt_data:           ; DS, SS, ES, FS, GS pointing to this segment
 dw 0xffff           ; seg limit 0-15
 dw 0x0000           ; seg base 0-15
