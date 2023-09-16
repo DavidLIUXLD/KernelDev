@@ -4,7 +4,7 @@
 #include "string/string.h"
 
 struct IDTRDescriptor32 idtr_desc;
-struct idt InterruptDescriptor32[IDT_TOTAL_INTERRUPTS];
+struct InterruptDescriptor32 idt[IDT_TOTAL_INTERRUPTS];
 
 extern void idt_load(struct IDTRDescriptor32* ptr);
 
@@ -16,12 +16,12 @@ void int_zero(void)
 
 void idt_set(int interrupt_number, void* offset, uint8_t DPL, uint8_t type, uint8_t param_count)
 {
-    struct InterruptDescriptor32 interrupt_desc = idt[interrupt_number];
-    interrupt_desc.offset_1 = offset & 0x0000ffff;
-    interrupt_desc.selector = KERNEL_CODE_SEG;
-    interrupt_desc.zero = 0x00 | param_count;
-    interrupt_desc.type_attributes = DPL | GATE_TYPE_INT;
-    interrupt_desc.offset_2 = offset >> 16;
+    struct InterruptDescriptor32* interrupt_desc = &idt[interrupt_number];
+    interrupt_desc->offset_1 = (uint32_t)offset & 0x0000ffff;
+    interrupt_desc->selector = KERNEL_CODE_SEG;
+    interrupt_desc->zero = 0x00 | param_count;
+    interrupt_desc->type_attributes = DPL | GATE_TYPE_INT;
+    interrupt_desc->offset_2 = (uint32_t)offset >> 16;
     return;
 }
 
@@ -51,9 +51,9 @@ void interrupt_div_by_zero(void)
 
 void idt_init(void)
 {
-    idt = memset(&idt, 0, sizeof(IDT));
-    IDTR_DESC.size = sizeof(IDT) - 1;
-    IDTR_DESC.offset = (uint32_t)idt;
+    memset(&idt, 0, sizeof(idt));
+    idtr_desc.size = sizeof(idt) - 1;
+    idtr_desc.offset = (uint32_t)idt;
     idt_load(&idtr_desc);
     idt_set_int(0, interrupt_div_by_zero, 0xE0);
     return;

@@ -8,5 +8,5 @@ void* memset(void* ptr, int c, size_t size)
     {
         src_ptr[i] = (char)c;
     }
-    return str;
+    return ptr;
 }

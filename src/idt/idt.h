@@ -23,7 +23,9 @@ struct IDTRDescriptor32
     uint32_t offset;            // Linear address of IDT  
 } __attribute__((packed));
 
-void idt_set(int interrupt_number, void* offset);
+void idt_set_int(int interrupt_number, void* offset, uint8_t DPL);
+void idt_set_call(int interrupt_number, void* offset, uint8_t DPL, uint8_t param_count);
+void idt_set_trap(int interrupt_number, void* offset, uint8_t DPL);
 void idt_init(void);
 
 #endif
