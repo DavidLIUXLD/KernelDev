@@ -12,6 +12,7 @@ void kernel_main(void)
     //  video_mem[0] = terminal_make_char('C', 3);
     **/
     Terminal_Initialize();
-    print("Hello World!\nKernel Initialize");
+    print("Hello World!\nKernel Initialize\n");
     idt_init();
+    print("IDT initialized\n");
 }
