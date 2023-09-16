@@ -2,6 +2,7 @@
 #include "config.h"
 #include "io/terminal.h"
 #include "string/string.h"
+#include "idt/idt.h"
 
 
 void kernel_main(void) 
@@ -11,5 +12,6 @@ void kernel_main(void)
     //  video_mem[0] = terminal_make_char('C', 3);
     **/
     Terminal_Initialize();
-    print("Hello World!\ntest");
+    print("Hello World!\nKernel Initialize");
+    idt_init();
 }

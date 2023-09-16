@@ -20,7 +20,7 @@ void idt_set(int interrupt_number, void* offset, uint8_t DPL, uint8_t type, uint
     interrupt_desc->offset_1 = (uint32_t)offset & 0x0000ffff;
     interrupt_desc->selector = KERNEL_CODE_SEG;
     interrupt_desc->zero = 0x00 | param_count;
-    interrupt_desc->type_attributes = DPL | GATE_TYPE_INT;
+    interrupt_desc->type_attributes = ((DPL << 4) & 0xF0) | (type & 0x0F);
     interrupt_desc->offset_2 = (uint32_t)offset >> 16;
     return;
 }
@@ -55,7 +55,7 @@ void idt_init(void)
     idtr_desc.size = sizeof(idt) - 1;
     idtr_desc.offset = (uint32_t)idt;
     idt_load(&idtr_desc);
-    idt_set_int(0, interrupt_div_by_zero, 0xE0);
+    idt_set_int(0, interrupt_div_by_zero, RING_3);
     return;
 }
 

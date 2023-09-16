@@ -25,4 +25,7 @@ _start:
     call kernel_main
     jmp $
     
+problem:
+    int 0
+
     times 512-($ - $$) db 0     ; section alignment for kernel.asm to 512 bytes
